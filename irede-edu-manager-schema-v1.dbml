@@ -1,0 +1,154 @@
+// -------------------------------------------------------------
+// TABELAS DE CONTROLADORIA 
+// Enums foram substituído por tabelas
+// -------------------------------------------------------------
+Table papel_usuario {
+  id int [pk, increment]
+  nome varchar [unique, note: 'ADMINISTRADOR, GESTOR, PROFESSOR, ANALISTA']
+  descricao text
+}
+Table usuario {
+  id int [pk]
+  nome varchar
+  email varchar [unique]
+  senhaHash varchar
+  papelId int [ref: > papel_usuario.id] // Relacionamento com tabela 'papel_usuario'
+  ativo boolean [default: true]
+  criadoEm timestamp [default: `now()`]
+  atualizadoEm timestamp
+}
+Table log_auditoria {
+  id int [pk]
+  usuarioId varchar [ref: > usuario.id] // Relacionamento com tabela 'usuário'
+  acao varchar
+  entidade varchar
+  registroId varchar
+  campos json
+  origemIp varchar
+  criadoEm timestamp [default: `now()`]
+}
+
+// -------------------------------------------------------------
+// TABELAS DE ALUNO/EX-ALUNO
+// -------------------------------------------------------------
+Table aluno {
+  id int [pk]
+  cpf varchar [unique]
+  nomeCompleto varchar
+  email varchar
+  telefone varchar
+  dataNascimento datetime
+  genero varchar
+  corRaca varchar
+  formacaoPrevia varchar
+  cep varchar
+  estado varchar
+  cidade varchar
+  bairro varchar
+  logradouro varchar
+  numero varchar
+  criadoEm timestamp [default: `now()`]
+  atualizadoEm timestamp
+}
+
+Table status_matricula {
+  id int [pk, increment]
+  nome varchar [unique, note: 'INSCRITO, MATRICULADO, ATIVO, EVADIDO, CONCLUIDO']
+  descricao text
+}
+
+Table matricula {
+  id int [pk]
+  alunoId int [ref: > aluno.id]              // Relacionamento com tabela 'aluno'
+  ofertaTurmaId int [ref: > oferta_turma.id] // Relacionamento com tabela 'oferta_turma'
+  statusId int [ref: > status_matricula.id]      // Relacionamento com tabela 'status_matricula'
+  notaFinal float
+  frequenciaFinal float
+  criadoEm timestamp [default: `now()`]
+  atualizadoEm timestamp
+  Indexes {(alunoId, ofertaTurmaId) [unique]}
+}
+
+Table indicador_matricula {
+  id int [pk]
+  matriculaId int [ref: > matricula.id] // Relacionamento com tabela 'matricula'
+  moduloNome varchar
+  nota float
+  frequencia float
+  criadoEm timestamp [default: `now()`]
+  atualizadoEm timestamp
+}
+
+// -------------------------------------------------------------
+// TABELAS DE CURSOS
+// -------------------------------------------------------------
+Table curso {
+  id int [pk]
+  nome varchar
+  programa varchar
+  projeto varchar
+  tecnologia varchar
+  cargaHoraria int
+  ativo boolean [default: true]
+  criadoEm timestamp [default: `now()`]
+  atualizadoEm timestamp
+}
+
+Table oferta_turma {
+  id int [pk]
+  cursoId int [ref: > curso.id] // Relacionamento com tabela 'curso'
+  codigoTurma varchar
+  ciclo varchar
+  ano int
+  semestre int
+  trilha varchar
+  ativa boolean [default: true]
+  criadoEm timestamp [default: `now()`]
+  atualizadoEm timestamp
+}
+
+// -------------------------------------------------------------
+// TABELAS DE EGRESSO
+// -------------------------------------------------------------
+Table egresso {
+  id int [pk]
+  alunoId int [unique, ref: - aluno.id]       // Relacionamento com tabela 'aluno'
+  situacaoId int [ref: > situacao_egresso.id] // Relacionamento com tabela 'situacao_egresso'
+  ultimaReview datetime
+  criadoEm timestamp [default: `now()`]
+  atualizadoEm timestamp
+}
+
+Table situacao_egresso {
+  id int [pk, increment]
+  nome varchar [unique, note: 'EMPREGADO_NA_AREA, EMPREGADO_FORA_DA_AREA, EMPREENDENDOR, CONTINUIDADE_ACADEMICA, PROJETO_DERIVADO, SEM_INFORMACAO, etc.']
+  descricao text
+}
+
+Table indicador_egresso {
+  id int [pk]
+  egressoId int  
+  metrica varchar
+  valor   varchar
+  dataReferência timestamp
+}
+Ref: indicador_egresso.egressoId > egresso.id [delete: cascade] // O símbolo '>' indica Muitos-para-Um
+
+Table vinculo_profissional {
+  id int [pk]
+  egressoId int
+  tipo varchar
+  url  varchar
+}
+Ref: vinculo_profissional.egressoId > egresso.id [delete: cascade]
+
+Table evidencia_impacto {
+  id int [pk]
+  egressoId int
+  tipo varchar
+  titulo varchar
+  descricao varchar
+  linkPublico varchar
+  dataOcorrencia timestamp
+}
+Ref: evidencia_impacto.egressoId > egresso.id [delete: cascade]
